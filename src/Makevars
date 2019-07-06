@@ -1,3 +1,5 @@
+UNAME:=$(shell uname -s)
+
 # If R_ARCH exists the shared library will be in e.g. pkgdir/libs/32/readr.so,
 # so we need to go up 2 levels. Otherwise only 1
 ifeq "$(R_ARCH)" ""
@@ -6,7 +8,12 @@ else
 RPATH = '../../rcon$(R_ARCH)'
 endif
 
+ifeq ($(UNAME), OpenBSD)
+PKG_LIBS = -lkvm -L. -lrcon -L$(RCON_DIR) -Wl,-rpath,'$$ORIGIN/$(RPATH)'
+else
 PKG_LIBS = -L. -lrcon -L$(RCON_DIR) -Wl,-rpath,'$$ORIGIN/$(RPATH)'
+endif
+
 PKG_CXXFLAGS = -I. -Ircon
 
 LIBRCON = ../inst/rcon$(R_ARCH)/librcon.so
@@ -16,7 +23,6 @@ all: $(SHLIB)
 
 $(SHLIB): $(LIBRCON)
 
-UNAME:=$(shell uname -s)
 ifeq ($(UNAME), Darwin)
 $(LIBRCON): rcon/connection.o
 	mkdir -p $(RCON_DIR)
